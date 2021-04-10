@@ -12,7 +12,9 @@ const SheepSchema = new Schema({
             type: String,
             required: true
         },
-
+        horns: {
+            type: String
+        },
         birthday: { // День рождения
             type: Schema.Types.Date,
             required: true,

@@ -3,6 +3,8 @@ const app = express();
 const authRoutes = require("./routes/auth")
 const farmRoutes = require("./routes/farm")
 const chabanRoutes = require("./routes/chaban")
+const sheepRoutes = require("./routes/sheep")
+
 const mongoose = require("mongoose")
 const passport = require("passport")
 const rateLimit = require("express-rate-limit");
@@ -57,5 +59,6 @@ app.use("/uploads",express.static("uploads"))
 app.use("/api/auth",authRoutes)
 app.use("/api/farm",farmRoutes)
 app.use("/api/chaban",chabanRoutes)
+app.use("/api/sheep",sheepRoutes)
 
 module.exports = app
