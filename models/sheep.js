@@ -12,6 +12,10 @@ const SheepSchema = new Schema({
             type: String,
             required: true
         },
+        sex: {
+            type: String,
+            required: true,
+        },
         horns: {
             type: String
         },
