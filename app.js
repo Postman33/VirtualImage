@@ -4,7 +4,7 @@ const authRoutes = require("./routes/auth")
 const farmRoutes = require("./routes/farm")
 const chabanRoutes = require("./routes/chaban")
 const sheepRoutes = require("./routes/sheep")
-
+const otaraRoutes= require("./routes/otara")
 const mongoose = require("mongoose")
 const passport = require("passport")
 const rateLimit = require("express-rate-limit");
@@ -60,5 +60,5 @@ app.use("/api/auth",authRoutes)
 app.use("/api/farm",farmRoutes)
 app.use("/api/chaban",chabanRoutes)
 app.use("/api/sheep",sheepRoutes)
-
+app.use("/api/otara",otaraRoutes)
 module.exports = app
