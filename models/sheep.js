@@ -2,19 +2,20 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
 const SheepSchema = new Schema({
+    chipNo: { // Номер чипа
+        type: String,
+        required: true
+    },
     passport: {
         // Информация о рождении
-        chipNo: { // Номер чипа
+
+        typeAnimal: { // Порода
             type: String,
             required: true
         },
-        breed: { // Порода
+        generation: { // Поколение
             type: String,
             required: true
-        },
-        sex: {
-            type: String,
-            required: true,
         },
         horns: {
             type: String
@@ -23,7 +24,7 @@ const SheepSchema = new Schema({
             type: Schema.Types.Date,
             required: true,
         },
-        dateOfEntry : { // Дата поступления
+        dateOfEntry: { // Дата поступления
             type: Schema.Types.Date,
             required: true,
         },
@@ -38,6 +39,10 @@ const SheepSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: "chaban",
         },
+        otara: {
+            type: Schema.Types.ObjectId,
+            ref: "otara",
+        },
 
         // Масть
         colorPrimary: { // Окраска шерстяного покрова
@@ -51,12 +56,39 @@ const SheepSchema = new Schema({
         },
 
         // Выбытие
-        dateOfDisposal:{
+        dateOfDisposal: {
             type: Date
         },
-        reasonOfDisposal:{
+        reasonOfDisposal: {
             type: String
+        },
+        isSelling: {
+            type: Boolean
+        },
+
+
+        bloodGroup: {
+            type: String,
+        },
+        bloodBreeds: {
+            type: String,
+        },
+        bloodPercent: { // Процент кровности
+            type: Number
+        },
+        typeOfCreating: {
+            type: String,
         }
+    },
+    genealogy: {
+        father: {
+            type: Schema.Types.ObjectId,
+            ref: "sheep"
+        },
+        mother: {
+            type: Schema.Types.ObjectId,
+            ref: "sheep"
+        },
     }
 });
 

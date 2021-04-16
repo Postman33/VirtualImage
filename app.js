@@ -5,6 +5,9 @@ const farmRoutes = require("./routes/farm")
 const chabanRoutes = require("./routes/chaban")
 const sheepRoutes = require("./routes/sheep")
 const otaraRoutes= require("./routes/otara")
+const eventRoutes= require("./routes/event")
+
+
 const mongoose = require("mongoose")
 const passport = require("passport")
 const rateLimit = require("express-rate-limit");
@@ -46,8 +49,8 @@ app.use(hpp()) // Parameter pollution
 app.use(helmet())
 
 const limiter = rateLimit({
-    windowMs: 3 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 3 * 60 * 1000, // 3 minutes
+    max: 2000 // limit each IP to 100 requests per windowMs
 });
 //  apply to all requests
 app.use(limiter);
@@ -61,4 +64,6 @@ app.use("/api/farm",farmRoutes)
 app.use("/api/chaban",chabanRoutes)
 app.use("/api/sheep",sheepRoutes)
 app.use("/api/otara",otaraRoutes)
+app.use("/api/event",eventRoutes)
+
 module.exports = app
