@@ -4,7 +4,8 @@ const Schema = mongoose.Schema
 const SheepSchema = new Schema({
     chipNo: { // Номер чипа
         type: String,
-        required: true
+        required: true,
+        unique: true
     },
     passport: {
         // Информация о рождении
@@ -33,7 +34,6 @@ const SheepSchema = new Schema({
         farm: { // Принадлежность к ферме
             type: Schema.Types.ObjectId,
             ref: "farm",
-            required: true
         },
         chaban: { // Чабан
             type: Schema.Types.ObjectId,
@@ -92,4 +92,11 @@ const SheepSchema = new Schema({
     }
 });
 
+SheepSchema.query.PopulateAll = function(name) {
+    return this.populate({path:"passport.farm",select:"-__v"})
+        .populate({path:"passport.chaban",select:"-__v"})
+        .populate({path:"passport.otara",select:"-__v"})
+
+        ;
+};
 module.exports = mongoose.model("sheep", SheepSchema)

@@ -7,19 +7,26 @@ const ErrorHandler = require("../util/errorHandler")
 module.exports.getAll = async function (req, res) {
 
     try {
-        const sheeps = await Sheep.find().select("-__v");
+        console.log(req.query)
+        let query = {...req.query}
+
+        let queryJSON = JSON.stringify(query);
+
+        queryJSON = queryJSON.replace(/(gte|gt|lt|lte|eq|ne|in|nin)/gi, match=>`$${match}`)
+        query = JSON.parse(queryJSON);
+        console.log(query)
+        const sheeps = await Sheep.find(query).PopulateAll().select("-__v");
         res.status(200).json(sheeps)
     } catch (Err) {
         ErrorHandler(res, Err)
     }
-
 
 }
 
 module.exports.getById = async function (req, res) {
 
     try {
-        const sheep = await Sheep.findById(req.params.id).select("-__v");
+        const sheep = await Sheep.findById(req.params.id).PopulateAll().select("-__v");
         res.status(200).json(sheep)
     } catch (Err) {
         ErrorHandler(res, Err)
@@ -43,6 +50,7 @@ module.exports.create = async function (req, res) {
 module.exports.update = async function (req, res) {
 
     try {
+        console.log(req.body)
         const sheep = await Sheep.findOneAndUpdate({_id: req.params.id}, {$set: req.body},
             {
                 new: true,
