@@ -19,5 +19,7 @@ const EventSchema = new Schema({
         required: true
     }
 });
-
+EventSchema.query.PopulateAll = function(name) {
+    return this.populate({path:"animals",select:"-__v"});
+};
 module.exports = mongoose.model("event", EventSchema)

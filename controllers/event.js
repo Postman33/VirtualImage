@@ -8,7 +8,7 @@ module.exports.getAll = async function (req, res) {
 
     try {
 
-        const events = await Event.find().select("-__v");
+        const events = await Event.find().PopulateAll().select("-__v");
         res.status(200).json(events)
     } catch (Err) {
         ErrorHandler(res, Err)
@@ -20,7 +20,7 @@ module.exports.getAll = async function (req, res) {
 module.exports.getById = async function (req, res) {
 
     try {
-        const event = await Event.findById(req.params.id).select("-__v");
+        const event = await Event.findById(req.params.id).PopulateAll().select("-__v");
         res.status(200).json(event)
     } catch (Err) {
         ErrorHandler(res, Err)
@@ -31,7 +31,7 @@ module.exports.getById = async function (req, res) {
 module.exports.create = async function (req, res) {
 
     try {
-
+        console.log(req.body)
         const event = await new Event(req.body).save();
 
         res.status(200).json(event)
