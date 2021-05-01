@@ -63,4 +63,13 @@ module.exports.register = async function (req, res) {
 
     }
 }
+
+module.exports.allowTo = function (role) {
+    return (req,res,next)=>{
+        if (req.user.role !== role){
+            return res.json({message:"Не хватает прав доступа!"})
+        }
+        next()
+    }
+}
 // const user = mongoose.model("users")

@@ -1,6 +1,7 @@
 const Sheep = require("../models/sheep")
-
-
+const mongoose = require("mongoose")
+const Event = require("../models/event")
+const ObjectId = mongoose.Types.ObjectId;
 const ErrorHandler = require("../util/errorHandler")
 
 
@@ -34,6 +35,44 @@ module.exports.getById = async function (req, res) {
 
 
 }
+module.exports.getStats = async function (req, res) {
+
+    try {
+        console.log(req.params.id)
+        const events = await Event.aggregate( [
+            {
+                $unwind: "$animals"
+            },
+            {
+                $match: {animals: ObjectId(req.params.id)}
+            },
+            {
+                $group : {
+                    _id: "$animals",
+                    maxWeight: {$max:"$eventData.weight"},
+                    avgWeight: {$avg:"$eventData.weight"},
+                }
+            }
+        ]);
+
+        const dates = await Event.findOne({
+           "eventData.weight":events[0].maxWeight.toString()
+        });
+        let complexResponse = {
+            event: events[0],
+            maxDateWeight: dates
+
+        }
+
+
+        res.status(200).json(complexResponse)
+    } catch (Err) {
+        ErrorHandler(res, Err)
+    }
+
+
+}
+
 module.exports.create = async function (req, res) {
 
     try {

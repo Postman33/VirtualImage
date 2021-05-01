@@ -7,6 +7,7 @@ const upload = require("../middleware/upload")
 
 router.get("/",sheepController.getAll)
 router.get("/:id",sheepController.getById)
+router.get("/:id/stats",sheepController.getStats)
 router.post("/",sheepController.create)
 router.patch("/:id",sheepController.update)
 router.delete("/:id",sheepController.delete)
