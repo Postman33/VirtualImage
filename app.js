@@ -6,7 +6,7 @@ const chabanRoutes = require("./routes/chaban")
 const sheepRoutes = require("./routes/sheep")
 const otaraRoutes= require("./routes/otara")
 const eventRoutes= require("./routes/event")
-
+const reportsRoutes= require("./routes/stats")
 
 const mongoose = require("mongoose")
 const passport = require("passport")
@@ -65,5 +65,7 @@ app.use("/api/chaban",chabanRoutes)
 app.use("/api/sheep",sheepRoutes)
 app.use("/api/otara",otaraRoutes)
 app.use("/api/event",eventRoutes)
+app.use("/api/reports",reportsRoutes)
+
 
 module.exports = app

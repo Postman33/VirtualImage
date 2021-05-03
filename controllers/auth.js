@@ -72,4 +72,18 @@ module.exports.allowTo = function (role) {
         next()
     }
 }
+module.exports.getMyRole =  async function (req, res) {
+    try {
+        const user = req.user
+        res.status(200).json( {
+            role: user.role
+        })
+    }
+    catch (e) {
+        require("../util/errorHandler")(res, e)
+    }
+
+}
+
+
 // const user = mongoose.model("users")

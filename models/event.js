@@ -14,10 +14,7 @@ const EventSchema = new Schema({
         type: [Schema.Types.ObjectId],
         ref: "sheep"
     },
-    eventData: {
-        type: Schema.Types.Mixed,
-        required: true
-    }
+    eventData: Schema.Types.Mixed
 });
 EventSchema.query.PopulateAll = function(name) {
     return this.populate({path:"animals",select:"-__v"});

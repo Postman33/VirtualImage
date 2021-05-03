@@ -13,9 +13,10 @@ module.exports.getAll = async function (req, res) {
 
         let queryJSON = JSON.stringify(query);
 
-        queryJSON = queryJSON.replace(/(gte|gt|lt|lte|eq|ne|in|nin)/gi, match=>`$${match}`)
+        queryJSON = queryJSON.replace(/(gte|gt|lt|lte|eq|ne|in|nin)/gi, match => `$${match}`)
         query = JSON.parse(queryJSON);
         console.log(query)
+
         const sheeps = await Sheep.find(query).PopulateAll().select("-__v");
         res.status(200).json(sheeps)
     } catch (Err) {
@@ -39,7 +40,7 @@ module.exports.getStats = async function (req, res) {
 
     try {
         console.log(req.params.id)
-        const events = await Event.aggregate( [
+        const events = await Event.aggregate([
             {
                 $unwind: "$animals"
             },
@@ -47,17 +48,23 @@ module.exports.getStats = async function (req, res) {
                 $match: {animals: ObjectId(req.params.id)}
             },
             {
-                $group : {
+                $group: {
                     _id: "$animals",
-                    maxWeight: {$max:"$eventData.weight"},
-                    avgWeight: {$avg:"$eventData.weight"},
+                    maxWeight: {$max: "$eventData.weight"},
+                    avgWeight: {$min: "$eventData.weight"},
+                    avgWoolWidth: {$avg: "$eventData.woolWidth"},
+                    sumDirtWeight:  {$sum: "$eventData.weightDirt"},
+                    sumCleanWeight: {$sum: "$eventData.weightClean"}
+
                 }
             }
         ]);
 
-        const dates = await Event.findOne({
-           "eventData.weight":events[0].maxWeight.toString()
+
+        let dates = await Event.findOne({
+            "eventData.weight": events[0]?.maxWeight?.toString() || "-1"
         });
+
         let complexResponse = {
             event: events[0],
             maxDateWeight: dates
@@ -93,7 +100,8 @@ module.exports.update = async function (req, res) {
         const sheep = await Sheep.findOneAndUpdate({_id: req.params.id}, {$set: req.body},
             {
                 new: true,
-                runValidators: true})
+                runValidators: true
+            })
         res.status(200).json(sheep)
     } catch (Err) {
         ErrorHandler(res, Err)
