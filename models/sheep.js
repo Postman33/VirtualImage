@@ -90,8 +90,14 @@ const SheepSchema = new Schema({
             ref: "sheep"
         },
     }
-});
-
+},
+    {
+        toJSON: {virtuals: true},
+        toObject: {virtuals: true}
+    });
+// SheepSchema.virtual("type").get(function() {
+//     return 'test'
+// })
 SheepSchema.query.PopulateAll = function(name) {
     return this.populate({path:"passport.farm",select:"-__v"})
         .populate({path:"passport.chaban",select:"-__v"})

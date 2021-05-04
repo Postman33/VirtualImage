@@ -8,24 +8,43 @@ const ErrorHandler = require("../util/errorHandler")
 module.exports.getAllStats = async function(req, res) {
 
     try {
-        console.log("Body= ", req.body)
+        let startDate = new Date(Date.parse(req.body.start));
+        let endDate = new Date(Date.parse(req.body.end));
 
-        const filter = {
+        const filterAnd = {
             $and: [
-                {"passport.birthday": {$lte:req.body.end}},
-                {"passport.birthday": {$gte:req.body.start}}
+                {"passport.birthday": {$lte:endDate}},
+                {"passport.birthday": {$gte:startDate}}
             ]
-
         }
-        const animals = await Sheep.find(filter);
-        console.log(animals)
+
+        const animalsPeriod = await Sheep.find(filterAnd).lean();
+        const animalsAfter = await Sheep.aggregate([
+            {
+                $match: {
+                    "passport.birthday": {
+                        $lte: endDate,
+                    }
+                },
+
+            },
+            {
+                $group: {
+                    _id: "$passport.typeAnimal",
+                    sum: {
+                        $sum: 1
+                    }
+                }
+            }
+        ]);
+
         let cfg = {
             "Родившихся баранов": 0,
             "Родившихся овец": 0,
             "Умерших баранов": 0,
             "Умерших овец": 0,
         }
-        for (let anim of animals){
+        for (let anim of animalsPeriod){
             if (String(anim.passport.reasonOfDisposal).toLowerCase().toString() !== "племпродажа" && anim.passport.reasonOfDisposal !== undefined){
                 if (anim.passport.typeAnimal === "Баран"){
                     cfg["Умерших баранов"]++;
@@ -44,8 +63,9 @@ module.exports.getAllStats = async function(req, res) {
                 }
             }
         }
-        console.log(cfg)
-        const events = await Event.aggregate([
+
+
+        const eventsStats = await Event.aggregate([
             {
                 $unwind: "$animals"
             },
@@ -60,28 +80,41 @@ module.exports.getAllStats = async function(req, res) {
             },
 
             {
+                $match: {
+                    "eventData.date": {
+                    $gte:req.body.start, $lte: req.body.end,
+                }
+                }
+
+            },
+            {
                 $group: {
-                    _id: "$animalInfo.passport.typeAnimal",
+                    _id: null,
+                    //maxWeight: {$max: "$eventData.weight"},
+                    avgWeight: {$min: "$eventData.weight"},
+                    avgWoolWidth: {$avg: "$eventData.woolWidth"},
+                    sumDirtWeight:  {$sum: "$eventData.weightDirt"},
+                    sumCleanWeight: {$sum: "$eventData.weightClean"}
 
                 }
             }
 
         ]);
+        console.log(eventsStats)
 
 
-
-        const allEvents = await Event.find().PopulateAll();
-
-        for (let event of allEvents){
-
-        }
-
+        // const allEvents = await Event.find().PopulateAll();
+        //
+        // for (let event of allEvents){
+        //
+        // }
 
 
+       let responseObject = {}
 
-        let responseObject = [];
+        let statsArray = [];
         for(let key in cfg){
-            responseObject.push(
+            statsArray.push(
                 {
                     name: key,
                     value: cfg[key]
@@ -89,11 +122,13 @@ module.exports.getAllStats = async function(req, res) {
             )
         }
 
-
+        responseObject["stats"] = statsArray;
+        responseObject['tableStats'] = animalsAfter;
+        responseObject["eventTableStats"] = eventsStats[0];
 
         res.status(200).json(responseObject)
     } catch (Err) {
         ErrorHandler(res, Err)
     }
 
-}
+};
