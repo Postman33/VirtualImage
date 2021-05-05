@@ -5,7 +5,7 @@ const Sheep = require("../models/sheep")
 const ErrorHandler = require("../util/errorHandler")
 
 
-module.exports.getAllStats = async function(req, res) {
+module.exports.getPeriodStats = async function (req, res) {
 
     try {
         let startDate = new Date(Date.parse(req.body.start));
@@ -13,8 +13,8 @@ module.exports.getAllStats = async function(req, res) {
 
         const filterAnd = {
             $and: [
-                {"passport.birthday": {$lte:endDate}},
-                {"passport.birthday": {$gte:startDate}}
+                {"passport.birthday": {$lte: endDate}},
+                {"passport.birthday": {$gte: startDate}}
             ]
         }
 
@@ -24,6 +24,9 @@ module.exports.getAllStats = async function(req, res) {
                 $match: {
                     "passport.birthday": {
                         $lte: endDate,
+                    },
+                    "passport.reasonOfDisposal": {
+                        $eq: undefined
                     }
                 },
 
@@ -44,21 +47,21 @@ module.exports.getAllStats = async function(req, res) {
             "Умерших баранов": 0,
             "Умерших овец": 0,
         }
-        for (let anim of animalsPeriod){
-            if (String(anim.passport.reasonOfDisposal).toLowerCase().toString() !== "племпродажа" && anim.passport.reasonOfDisposal !== undefined){
-                if (anim.passport.typeAnimal === "Баран"){
+        for (let anim of animalsPeriod) {
+            if (String(anim.passport.reasonOfDisposal).toLowerCase().toString() !== "племпродажа" && anim.passport.reasonOfDisposal !== undefined) {
+                if (anim.passport.typeAnimal === "Баран") {
                     cfg["Умерших баранов"]++;
                 }
-                if (anim.passport.typeAnimal === "Овца"){
+                if (anim.passport.typeAnimal === "Овца") {
                     cfg["Умерших овец"]++;
                 }
             }
 
-            if (!anim.passport.reasonOfDisposal!==''){
-                if (anim.passport.typeAnimal === "Баран"){
+            if (!anim.passport.reasonOfDisposal !== '') {
+                if (anim.passport.typeAnimal === "Баран") {
                     cfg["Родившихся баранов"]++;
                 }
-                if (anim.passport.typeAnimal === "Овца"){
+                if (anim.passport.typeAnimal === "Овца") {
                     cfg["Родившихся овец"]++;
                 }
             }
@@ -69,10 +72,11 @@ module.exports.getAllStats = async function(req, res) {
             {
                 $unwind: "$animals"
             },
-            { $lookup: {
-                from: "sheep", localField:"animals",foreignField: "_id",
+            {
+                $lookup: {
+                    from: "sheep", localField: "animals", foreignField: "_id",
                     as: "animalInfo"
-            }
+                }
             },
 
             {
@@ -82,8 +86,9 @@ module.exports.getAllStats = async function(req, res) {
             {
                 $match: {
                     "eventData.date": {
-                    $gte:req.body.start, $lte: req.body.end,
-                }
+                        $gte: req.body.start,
+                        $lte: req.body.end,
+                    }
                 }
 
             },
@@ -93,27 +98,20 @@ module.exports.getAllStats = async function(req, res) {
                     //maxWeight: {$max: "$eventData.weight"},
                     avgWeight: {$min: "$eventData.weight"},
                     avgWoolWidth: {$avg: "$eventData.woolWidth"},
-                    sumDirtWeight:  {$sum: "$eventData.weightDirt"},
+                    sumDirtWeight: {$sum: "$eventData.weightDirt"},
                     sumCleanWeight: {$sum: "$eventData.weightClean"}
 
                 }
             }
 
         ]);
-        console.log(eventsStats)
 
 
-        // const allEvents = await Event.find().PopulateAll();
-        //
-        // for (let event of allEvents){
-        //
-        // }
 
-
-       let responseObject = {}
+        let responseObject = {}
 
         let statsArray = [];
-        for(let key in cfg){
+        for (let key in cfg) {
             statsArray.push(
                 {
                     name: key,
@@ -127,6 +125,32 @@ module.exports.getAllStats = async function(req, res) {
         responseObject["eventTableStats"] = eventsStats[0];
 
         res.status(200).json(responseObject)
+    } catch (Err) {
+        ErrorHandler(res, Err)
+    }
+
+};
+module.exports.getStructureStats = async function (req, res) {
+
+    try {
+
+        const YARKA1 = 'Ярки до года';
+        const YARKA2 = 'Ярки до двух лет';
+
+
+       // let date = new Date(Date.parse(req.body.date));
+        const date = req.body.date.toLocaleString()
+        console.log(req.body)
+        const filter = {
+
+            "passport.birthday": {$lte: req.body.date},
+
+        }
+
+
+        const animalsPeriod = await Sheep.find(filter)
+
+        console.log(animalsPeriod)
     } catch (Err) {
         ErrorHandler(res, Err)
     }

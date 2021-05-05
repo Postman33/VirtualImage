@@ -102,7 +102,8 @@ SheepSchema.query.PopulateAll = function(name) {
     return this.populate({path:"passport.farm",select:"-__v"})
         .populate({path:"passport.chaban",select:"-__v"})
         .populate({path:"passport.otara",select:"-__v"})
-
+        .populate({path:"genealogy.father",select:"-__v"})
+        .populate({path:"genealogy.mother",select:"-__v"})
         ;
 };
 module.exports = mongoose.model("sheep", SheepSchema)
