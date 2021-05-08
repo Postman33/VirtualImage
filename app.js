@@ -7,7 +7,7 @@ const sheepRoutes = require("./routes/sheep")
 const otaraRoutes= require("./routes/otara")
 const eventRoutes= require("./routes/event")
 const reportsRoutes= require("./routes/stats")
-
+const notifyRoutes= require("./routes/notification")
 const mongoose = require("mongoose")
 const passport = require("passport")
 const rateLimit = require("express-rate-limit");
@@ -66,6 +66,8 @@ app.use("/api/sheep",sheepRoutes)
 app.use("/api/otara",otaraRoutes)
 app.use("/api/event",eventRoutes)
 app.use("/api/reports",reportsRoutes)
+app.use("/api/notify",notifyRoutes)
+
 
 
 module.exports = app
