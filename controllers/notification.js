@@ -15,14 +15,13 @@ module.exports.getAll = async function (req, res) {
 
 }
 
-module.exports.saveAll = async function (req, res) {
+module.exports.saveAll = async function(req, res) {
 
     try {
-        console.log(req.body)
-            const records = req.body.records
+        const records = req.body.records
         for( let k in records){
             if (!records.hasOwnProperty(k)) continue
-            console.log(k)
+            if (records[k].id == null && records[k].name==="--REMOVE" ){continue } // TODO: Check this
             if (records[k].id == null){
                 await new Notification({
                     ...records[k]
@@ -33,7 +32,6 @@ module.exports.saveAll = async function (req, res) {
                 } else {
                     await Notification.findByIdAndUpdate(records[k].id,{$set: {...records[k]}})
                 }
-
             }
         }
         res.status(200).json({message:"Сохранено!"})
