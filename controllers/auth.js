@@ -72,12 +72,10 @@ module.exports.allowTo = function (role) {
         next()
     }
 }
-module.exports.getMyRole =  async function (req, res) {
+module.exports.isAdmin =  async function (req, res) {
     try {
         const user = req.user
-        res.status(200).json( {
-            role: user.role
-        })
+        res.status(200).json(user.role === "admin")
     }
     catch (e) {
         require("../util/errorHandler")(res, e)

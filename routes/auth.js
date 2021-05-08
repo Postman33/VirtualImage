@@ -6,7 +6,7 @@ const passport = require("passport")
 //http://localhost:3000/api/auth/login
 router.post("/login",authController.login)
 router.post("/register",authController.register)
-router.post("/getMyRole",passport.authenticate("jwt",{session: false}),authController.getMyRole)
+router.get("/isAdmin",passport.authenticate("jwt",{session: false}),authController.isAdmin)
 
 
 module.exports = router

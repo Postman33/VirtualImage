@@ -8,6 +8,7 @@ const passport = require("passport")
 
 router.post("/stats",passport.authenticate("jwt",{session: false}),statsController.getPeriodStats)
 router.post("/structure",passport.authenticate("jwt",{session: false}),statsController.getStructureStats)
+router.post("/custom",passport.authenticate("jwt",{session: false}),statsController.getCustomReport)
 
 
 module.exports = router
