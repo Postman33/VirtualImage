@@ -28,7 +28,6 @@ module.exports = mongoose.model("notify", NotificationSchema)
 
 const cron = require("node-cron");
 const nodemailer = require("nodemailer");
-console.log('test')
 
 
 const Notification = mongoose.model("notify")
@@ -36,13 +35,13 @@ const Notification = mongoose.model("notify")
 const User = mongoose.model("users")
 
 
-cron.schedule("* * * * *", async () => {
+cron.schedule("0 */10 * * * *", async () => {
     try {
         const not = await Notification.find({
             time: {$lte: new Date()},
             completed: false
         })
-        //{role: {$ne:"admin"}}
+
         let Users = []
         const users = await User.find();
         for (let user of users) {
@@ -70,7 +69,7 @@ cron.schedule("* * * * *", async () => {
 
             transporter.sendMail(mailOptions, async function (error, info) {
                 if (error) {
-                    console.log(error)
+
                     return false;
                 } else {
                     console.log('Message sent: ' + info.response);

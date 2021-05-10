@@ -305,7 +305,46 @@ module.exports.getCustomReport = async function (req, res) {
             }
 
         ]);
+        const eventsStatsTotal = await Event.aggregate([
+            {
+                $unwind: "$animals"
+            },
+            {
+                $lookup: {
+                    from: "sheep", localField: "animals", foreignField: "_id",
+                    as: "animalInfo"
+                }
+            },
+
+            {
+                $unwind: "$animalInfo"
+            },
+
+            {
+                $match: {
+                    "eventData.date": {
+                        $gte: req.body.start,
+                        $lte: req.body.end,
+                    }
+                }
+
+            },
+            {
+                $group: {
+                    _id: null,
+                    maxWeight: {$max: "$eventData.weight"},
+                    avgWeight: {$min: "$eventData.weight"},
+                    avgWoolWidth: {$avg: "$eventData.woolWidth"},
+                    sumDirtWeight: {$sum: "$eventData.weightDirt"},
+                    sumCleanWeight: {$sum: "$eventData.weightClean"}
+
+                }
+            }
+
+        ]);
+
         console.log(eventsStats)
+        console.log(eventsStatsTotal)
         res.status(200).json({
             stats:{}
         })
