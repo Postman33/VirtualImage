@@ -250,24 +250,62 @@ module.exports.getCustomReport = async function (req, res) {
 
     try {
 
-        const date = req.body.date.toLocaleString()
+
         console.log(req.body)
 
-        const filter = {
-            "passport.birthday": {$lte: req.body.date},
-            $or: [
-                {
-                    "passport.dateOfDisposal": {$gte: req.body.date}
-                },
-                {
-                    "passport.dateOfDisposal": {$eq: undefined}
+        // const filter = {
+        //     "passport.birthday": {$lte: req.body.date},
+        //     $or: [
+        //         {
+        //             "passport.dateOfDisposal": {$gte: req.body.date}
+        //         },
+        //         {
+        //             "passport.dateOfDisposal": {$eq: undefined}
+        //         }
+        //     ]
+        // }
+        //
+        //
+        // const animalsPeriod = await Sheep.find(filter).lean();
+
+        const eventsStats = await Event.aggregate([
+            {
+                $unwind: "$animals"
+            },
+            {
+                $lookup: {
+                    from: "sheep", localField: "animals", foreignField: "_id",
+                    as: "animalInfo"
                 }
-            ]
-        }
+            },
 
+            {
+                $unwind: "$animalInfo"
+            },
 
-        const animalsPeriod = await Sheep.find(filter).lean();
+            {
+                $match: {
+                    "eventData.date": {
+                        $gte: req.body.start,
+                        $lte: req.body.end,
+                    }
+                }
 
+            },
+            {
+                $group: {
+                    _id: "$animalInfo",
+                    //maxWeight: {$max: "$eventData.weight"},
+                    avgWeight: {$min: "$eventData.weight"},
+                    avgWoolWidth: {$avg: "$eventData.woolWidth"},
+                    sumDirtWeight: {$sum: "$eventData.weightDirt"},
+                    sumCleanWeight: {$sum: "$eventData.weightClean"}
+
+                }
+            }
+
+        ]);
+        console.log(eventsStats)
         res.status(200).json({
             stats:{}
         })
