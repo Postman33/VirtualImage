@@ -5,52 +5,52 @@ const ObjectId = mongoose.Types.ObjectId;
 const ErrorHandler = require("../util/errorHandler")
 // tableOrigin- стат. животного
 // tableRelative - стат. по ферме животных
-function compareIndicator(indicatorName, tableOrigin, tableRelative) {
+// Сравнение показателя с средним показателем фермы
+function compareIndicator(indicatorName, tableOrigin, tableRelative, indicatorPrefix = '', indicatorComparePrefix = "avg") {
     let mx = "max";
     let mn = "min";
-    let ag = "avg";
-    let avgOrigin = tableOrigin[ag + indicatorName];
-    let avgRelative = tableRelative[ag + indicatorName];
+    let OriginIndicator = tableOrigin[indicatorPrefix + indicatorName];
+    let RelativeIndicator = tableRelative[indicatorComparePrefix + indicatorName];
 
-    // let minOrigin = tableOrigin[mn + indicatorName];
     let minRelative = tableRelative[mn + indicatorName];
-
-    //let maxOrigin = tableOrigin[mx + indicatorName];
     let maxRelative = tableRelative[mx + indicatorName];
+
 
     let DiffRelative = (maxRelative - minRelative) / 5;
 
-    if (avgOrigin < (avgRelative + DiffRelative) && avgOrigin > (avgRelative - DiffRelative)) {
-        return {
-            name: 'Среднее',
-            class: "average",
-            valueOrigin: Math.floor(tableOrigin[ag + indicatorName]),
-            valueRelative: Math.floor(tableRelative[ag + indicatorName]),
-            progressBarEffect: Math.floor((avgOrigin / maxRelative) * 100)
-        }
+    let clazz;
+    let effect;
+    let reverseInd = 1;
+
+    if (OriginIndicator < (RelativeIndicator + DiffRelative) && OriginIndicator > (RelativeIndicator - DiffRelative)) {
+        clazz = "average"
+        effect = "Среднее"
     } else {
-        if (avgOrigin < (avgRelative - DiffRelative)) {
-            return {
-                name: 'Слабое',
-                class: "low",
-                valueOrigin: Math.floor(tableOrigin[ag + indicatorName]),
-                valueRelative: Math.floor(tableRelative[ag + indicatorName]),
-                progressBarEffect: Math.floor((avgOrigin / maxRelative) * 100)
-            }
+        if (OriginIndicator < (RelativeIndicator - DiffRelative)) {
+            clazz = "low"
+            effect = "Слабое"
         }
-
-        if (avgOrigin > (avgRelative + DiffRelative)) {
-            return {
-
-                name: 'Высокое',
-                class: "high",
-                valueOrigin: Math.floor(tableOrigin[ag + indicatorName]),
-                valueRelative: Math.floor(tableRelative[ag + indicatorName]),
-                progressBarEffect: Math.floor((avgOrigin / maxRelative) * 100)
-            }
+        if (OriginIndicator > (RelativeIndicator + DiffRelative)) {
+            clazz = "high"
+            effect = "Высокое";
         }
-
     }
+    reverseInd = Math.floor(100 * (RelativeIndicator / OriginIndicator))
+    if (reverseInd === Infinity || reverseInd == null) {
+        reverseInd = RelativeIndicator;
+    }
+
+    return {
+        name: effect,
+        class: clazz,
+        mode1: (indicatorPrefix === "avg" ? "avg" : "none"),
+        mode2: indicatorComparePrefix,
+        valueOrigin: Math.floor(OriginIndicator),
+        valueRelative: Math.floor(RelativeIndicator),
+        progressBarEffect: (OriginIndicator / RelativeIndicator * 100),
+        reverseProgressBarEffect: reverseInd
+    }
+
 
 }
 
@@ -62,33 +62,45 @@ function compareSumIndicator(indicatorNameWithSuffix, tableOrigin, tableRelative
 
     let difference = Math.floor((indOrigin / indRelative) * 100)
     let effect = "Среднее"
-    let clazz="average";
+    let clazz = "average";
+
     if (difference < 3) {
-        effect = "Почти не оказывает влияния"
-        clazz="low"
+        effect = "Очень плохое"
+        clazz = "low"
     }
     if (difference < 20) {
-        effect = "Слабое влияние"
-        clazz="low"
+        effect = "Плохое"
+        clazz = "low"
     }
     if (difference >= 20 && difference <= 45) {
-        effect = "Ниже среднего влияние"
-        clazz="lowAverage"
+        effect = "Хуже среднего"
+        clazz = "lowAverage"
     }
     if (difference > 45 && difference < 55) {
-        effect = "Среднее влияние"
-        clazz="average"
+        effect = "Нормальное"
+        clazz = "average"
     }
     if (difference >= 55 && difference < 85) {
-        effect = "Выше среднего влияние"
-        clazz="highAverage"
+        effect = "Хорошее"
+        clazz = "highAverage"
     }
     if (difference >= 85) {
-        effect = "Очень высокое влияние"
-        clazz="high"
+        effect = "Очень хорошее"
+        clazz = "high"
     }
+    let reverseInd = Math.floor(difference * (indRelative / indOrigin))
 
-    return {name: effect, valueOrigin: Math.floor(indOrigin), class:clazz,valueRelative: Math.round(indRelative), progressBarEffect: difference}
+    return {
+        name: effect,
+        class: clazz,
+        mode1: "sum",
+        mode2: "sum",
+
+        valueOrigin: Math.floor(indOrigin),
+        valueRelative: Math.round(indRelative),
+        progressBarEffect: difference,
+        reverseProgressBarEffect: reverseInd
+    }
 }
 
 
@@ -137,20 +149,31 @@ module.exports.getStats = async function (req, res) {
                 $match: {animals: ObjectId(req.params.id)}
             },
             {
+                $sort: {
+                    "eventData.date": 1
+                }
+            },
+            {
                 $group: {
                     _id: "$animals",
+                    Weight: {$last: "$eventData.weight"},
                     maxWeight: {$max: "$eventData.weight"},
                     avgWeight: {$min: "$eventData.weight"},
+                    WoolWidth: {$last: "$eventData.woolWidth"},
                     avgWoolWidth: {$avg: "$eventData.woolWidth"},
                     maxWoolWidth: {$max: "$eventData.woolWidth"},
                     minWoolWidth: {$min: "$eventData.woolWidth"},
                     sumDirtWeight: {$sum: "$eventData.weightDirt"},
-                    sumCleanWeight: {$sum: "$eventData.weightClean"}
+                    sumCleanWeight: {$sum: "$eventData.weightClean"},
+                    avgCleanWeight: {$avg: "$eventData.weightClean"},
+                    minCleanWeight: {$min: "$eventData.weightClean"},
+                    maxCleanWeight: {$max: "$eventData.weightClean"},
 
                 }
             }
         ]);
-        if (eventsAnimal.toString() == [].toString()) {
+        console.log(eventsAnimal)
+        if (eventsAnimal.toString() === [].toString()) {
             res.status(200).json("000")
             return;
         }
@@ -186,8 +209,10 @@ module.exports.getStats = async function (req, res) {
                     maxWoolWidth: {$max: "$eventData.woolWidth"},
                     minWoolWidth: {$min: "$eventData.woolWidth"},
                     sumDirtWeight: {$sum: "$eventData.weightDirt"},
-                    sumCleanWeight: {$sum: "$eventData.weightClean"}
-
+                    sumCleanWeight: {$sum: "$eventData.weightClean"},
+                    avgCleanWeight: {$avg: "$eventData.weightClean"},
+                    minCleanWeight: {$min: "$eventData.weightClean"},
+                    maxCleanWeight: {$max: "$eventData.weightClean"},
                 }
             }
         ]);
@@ -200,22 +225,21 @@ module.exports.getStats = async function (req, res) {
             "eventData.weight": eventsAnimal[0]?.maxWeight?.toString() || "-1"
         });
 
-        let complexResponse = {
-            //  event: eventsAnimal[0],
-            // maxDateWeight: dates
-        }
+
 
 
         let indWoolWidth = compareIndicator("WoolWidth", animalStats, farmTotal)
-        let indWeight = compareIndicator("WoolWidth", animalStats, farmTotal)
-        let indSumWoolDirt = compareSumIndicator("sumDirtWeight", animalStats, farmTotal)
-        let indSumWoolClean = compareSumIndicator("sumDirtWeight", animalStats, farmTotal)
+        let indWeight = compareIndicator("Weight", animalStats, farmTotal)
 
-        let response = {
-        }
-        response["Средняя живая масса, кг"] = indWeight
-        response["Средняя тонина шерсти, мк"] = indWoolWidth
-        response["Сумма немытой шерсти, кг"] = indSumWoolDirt
+
+        let indSumWoolDirt = compareSumIndicator("sumDirtWeight", animalStats, farmTotal)
+        let indSumWoolClean = compareSumIndicator("sumCleanWeight", animalStats, farmTotal)
+        let indAvgWoolClean = compareIndicator("CleanWeight", animalStats, farmTotal, 'avg')
+        console.log(indAvgWoolClean)
+        let response = {}
+        response["Живая масса, кг"] = indWeight
+        response["Тонина шерсти, мк"] = indWoolWidth
+        response["В среднем с одной овцы мытой шерсти, кг"] = indAvgWoolClean
         response["Сумма мытой шерсти, кг"] = indSumWoolClean
 
 
