@@ -24,15 +24,15 @@ function compareIndicator(indicatorName, tableOrigin, tableRelative, indicatorPr
 
     if (OriginIndicator < (RelativeIndicator + DiffRelative) && OriginIndicator > (RelativeIndicator - DiffRelative)) {
         clazz = "average"
-        effect = "Среднее"
+        effect = "Нормальное"
     } else {
         if (OriginIndicator < (RelativeIndicator - DiffRelative)) {
             clazz = "low"
-            effect = "Слабое"
+            effect = "Плохое"
         }
         if (OriginIndicator > (RelativeIndicator + DiffRelative)) {
             clazz = "high"
-            effect = "Высокое";
+            effect = "Хорошее";
         }
     }
     reverseInd = Math.floor(100 * (RelativeIndicator / OriginIndicator))
@@ -95,7 +95,6 @@ function compareSumIndicator(indicatorNameWithSuffix, tableOrigin, tableRelative
         class: clazz,
         mode1: "sum",
         mode2: "sum",
-
         valueOrigin: Math.floor(indOrigin),
         valueRelative: Math.round(indRelative),
         progressBarEffect: difference,
@@ -177,7 +176,7 @@ module.exports.getStats = async function (req, res) {
             res.status(200).json("000")
             return;
         }
-        const eventsAnimalTotal = await Event.aggregate([
+        const eventsAnimalTotalWeight = await Event.aggregate([
             {
                 $unwind: "$animals"
             },
@@ -197,7 +196,10 @@ module.exports.getStats = async function (req, res) {
                 }
             },
             {
-                $match: {"animalInfo.passport.farm": ObjectId(iAnimal.passport.farm)}
+                $match: {
+                    "animalInfo.passport.farm": ObjectId(iAnimal.passport.farm),
+                    "eventData.weight": {$gte:0}
+                }
             },
             {
                 $group: {
@@ -205,9 +207,69 @@ module.exports.getStats = async function (req, res) {
                     maxWeight: {$max: "$eventData.weight"},
                     minWeight: {$min: "$eventData.weight"},
                     avgWeight: {$min: "$eventData.weight"},
+
+                }
+            }
+        ]);
+        const eventsAnimalTotalWoolWidth = await Event.aggregate([
+            {
+                $unwind: "$animals"
+            },
+            {
+                $lookup: {
+                    from: "sheep", localField: "animals", foreignField: "_id",
+                    as: "animalInfo"
+                }
+            },
+
+            {
+                $unwind: "$animalInfo"
+            },
+            {
+                $project: {
+                    animals: 0
+                }
+            },
+            {
+                $match: {"animalInfo.passport.farm": ObjectId(iAnimal.passport.farm),
+                "eventData.woolWidth": {$gte:0}}
+            },
+            {
+                $group: {
+                    _id: null,
                     avgWoolWidth: {$avg: "$eventData.woolWidth"},
                     maxWoolWidth: {$max: "$eventData.woolWidth"},
                     minWoolWidth: {$min: "$eventData.woolWidth"},
+                }
+            }
+        ]);
+
+        const eventsAnimalTotalWoolWeight = await Event.aggregate([
+            {
+                $unwind: "$animals"
+            },
+            {
+                $lookup: {
+                    from: "sheep", localField: "animals", foreignField: "_id",
+                    as: "animalInfo"
+                }
+            },
+
+            {
+                $unwind: "$animalInfo"
+            },
+            {
+                $project: {
+                    animals: 0
+                }
+            },
+            {
+                $match: {"animalInfo.passport.farm": ObjectId(iAnimal.passport.farm),
+                    "eventData.weightDirt": {$gte:0}}
+            },
+            {
+                $group: {
+                    _id: null,
                     sumDirtWeight: {$sum: "$eventData.weightDirt"},
                     sumCleanWeight: {$sum: "$eventData.weightClean"},
                     avgCleanWeight: {$avg: "$eventData.weightClean"},
@@ -217,7 +279,14 @@ module.exports.getStats = async function (req, res) {
             }
         ]);
 
-        const farmTotal = eventsAnimalTotal[0];
+
+
+
+
+        const farmTotalWeight = eventsAnimalTotalWeight[0];
+        const farmTotalWoolWidth = eventsAnimalTotalWoolWidth[0];
+        const farmTotalWoolWeight = eventsAnimalTotalWoolWeight[0];
+
         const animalStats = eventsAnimal[0];
 
 
@@ -228,13 +297,13 @@ module.exports.getStats = async function (req, res) {
 
 
 
-        let indWoolWidth = compareIndicator("WoolWidth", animalStats, farmTotal)
-        let indWeight = compareIndicator("Weight", animalStats, farmTotal)
+        let indWoolWidth = compareIndicator("WoolWidth", animalStats, farmTotalWoolWidth)
+        let indWeight = compareIndicator("Weight", animalStats, farmTotalWeight)
 
 
-        let indSumWoolDirt = compareSumIndicator("sumDirtWeight", animalStats, farmTotal)
-        let indSumWoolClean = compareSumIndicator("sumCleanWeight", animalStats, farmTotal)
-        let indAvgWoolClean = compareIndicator("CleanWeight", animalStats, farmTotal, 'avg')
+        let indSumWoolDirt = compareSumIndicator("sumDirtWeight", animalStats, farmTotalWoolWeight)
+        let indSumWoolClean = compareSumIndicator("sumCleanWeight", animalStats, farmTotalWoolWeight)
+        let indAvgWoolClean = compareIndicator("CleanWeight", animalStats, farmTotalWoolWeight, 'avg')
         console.log(indAvgWoolClean)
         let response = {}
         response["Живая масса, кг"] = indWeight
