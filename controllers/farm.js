@@ -12,7 +12,6 @@ module.exports.getAll = async function (req, res) {
         ErrorHandler(res, Err)
     }
 
-
 }
 
 module.exports.getById = async function (req, res) {
