@@ -66,6 +66,8 @@ cron.schedule("0 */10 * * * *", async () => {
                 //text: notify.text, //,
                 html: '<b> ' + notify.text + '✔</b>'
             }
+
+
             transporter.sendMail(mailOptions, async function (error, info) {
                 if (error) {
 

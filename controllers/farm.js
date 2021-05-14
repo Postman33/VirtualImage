@@ -16,15 +16,12 @@ module.exports.getAll = async function (req, res) {
 }
 
 module.exports.getById = async function (req, res) {
-
     try {
         const farm = await Farm.findById(req.params.id);
         res.status(200).json(farm)
     } catch (Err) {
         ErrorHandler(res, Err)
     }
-
-
 }
 module.exports.create = async function (req, res) {
 
