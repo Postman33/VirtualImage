@@ -321,22 +321,17 @@ module.exports.getStats = async function (req, res) {
 }
 
 module.exports.create = async function (req, res) {
-
     try {
-
-        const chaban = await new Sheep(req.body).save();
-
-        res.status(200).json(chaban)
+        const sheep = await new Sheep(req.body).save();
+        res.status(200).json(sheep)
     } catch (Err) {
         ErrorHandler(res, Err)
     }
-
 
 }
 module.exports.update = async function (req, res) {
 
     try {
-
         const sheep = await Sheep.findOneAndUpdate({_id: req.params.id}, {$set: req.body},
             {
                 new: true,
@@ -346,19 +341,15 @@ module.exports.update = async function (req, res) {
     } catch (Err) {
         ErrorHandler(res, Err)
     }
-
-
 }
 
 module.exports.delete = async function (req, res) {
-
     try {
         await Sheep.remove({_id: req.params.id})
         res.status(200).json({message: `Объект ${req.params.id} был удален`})
     } catch (Err) {
         ErrorHandler(res, Err)
     }
-
 
 }
 module.exports.clearAll = async function (req, res) {

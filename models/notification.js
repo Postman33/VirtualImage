@@ -35,19 +35,18 @@ const Notification = mongoose.model("notify")
 const User = mongoose.model("users")
 
 
-cron.schedule("0 */10 * * * *", async () => {
+cron.schedule("0 */60 * * * *", async () => {
     try {
         const not = await Notification.find({
             time: {$lte: new Date()},
             completed: false
         })
-
         let Users = []
         const users = await User.find();
         for (let user of users) {
             Users.push(user.email)
         }
-        Users.push("lucky-pa777@yandex.ru")
+        //Users.push("lucky-pa777@yandex.ru")
 
         var smtpConfig = {
             host: 'smtp.gmail.com',
@@ -62,15 +61,17 @@ cron.schedule("0 */10 * * * *", async () => {
             var mailOptions = {
                 from: 'IASSheep33@gmail.com',
                 to: Users.join(","),
-                subject: notify.header,
-                //text: notify.text, //,
-                html: '<b> ' + notify.text + '✔</b>'
+                subject: `ИАС Овцы - уведомление '${notify.header}'`,
+                html:`
+                <h2>Это автоматическое извещение ИАС «Овцы». Пожалуйста, не отвечайте на него.</h2> 
+                 ${notify.text} 
+          
+                <br> Дата отправки: ${new Date().toLocaleString()} `
             }
 
 
             transporter.sendMail(mailOptions, async function (error, info) {
                 if (error) {
-
                     return false;
                 } else {
                     console.log('Message sent: ' + info.response);
@@ -82,7 +83,6 @@ cron.schedule("0 */10 * * * *", async () => {
                 ;
             })
         }
-
 
     } catch (e) {
         console.log(e)
