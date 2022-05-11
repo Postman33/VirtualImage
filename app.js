@@ -1,13 +1,10 @@
 const express = require("express");
 const app = express();
 const authRoutes = require("./routes/auth")
-const farmRoutes = require("./routes/farm")
-const chabanRoutes = require("./routes/chaban")
-const sheepRoutes = require("./routes/sheep")
-const otaraRoutes= require("./routes/otara")
-const eventRoutes= require("./routes/event")
-const reportsRoutes= require("./routes/stats")
-const notifyRoutes= require("./routes/notification")
+const newsRoutes = require("./routes/news")
+
+
+
 const mongoose = require("mongoose")
 const passport = require("passport")
 const rateLimit = require("express-rate-limit");
@@ -17,7 +14,7 @@ const xssClean = require("xss-clean")
 const hpp = require("hpp")
 
 mongoose.Promise = global.Promise;
-mongoose.connect("mongodb+srv://root:qteaS3q4warg13q4wrte@cluster0.kgzfu.mongodb.net/test?retryWrites=true&w=majority",{  useNewUrlParser: true,
+mongoose.connect("mongodb://localhost:27017",{  useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
     useCreateIndex: true})
@@ -55,18 +52,12 @@ const limiter = rateLimit({
 //  apply to all requests
 app.use(limiter);
 
-
+let d = /[a-zA-Z]()/gi
 
 app.use("/uploads",express.static("uploads"))
-
 app.use("/api/auth",authRoutes)
-app.use("/api/farm",farmRoutes)
-app.use("/api/chaban",chabanRoutes)
-app.use("/api/sheep",sheepRoutes)
-app.use("/api/otara",otaraRoutes)
-app.use("/api/event",eventRoutes)
-app.use("/api/reports",reportsRoutes)
-app.use("/api/notify",notifyRoutes)
+app.use("/api/news",newsRoutes)
+
 
 
 
